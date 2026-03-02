@@ -1,5 +1,6 @@
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.v1.deps import get_cache
 from app.core.cache import CacheService
@@ -17,14 +18,20 @@ async def create_item(
     db: AsyncSession = Depends(get_db),
     cache: CacheService = Depends(get_cache),
 ):
-    svc = ItemService(db, cache)
-    return await svc.create_item(
-        name=body.name,
-        price=body.price,
-        stock_quantity=body.stock_quantity,
-        description=body.description,
-        low_stock_threshold=body.low_stock_threshold,
-    )
+    try:
+        svc = ItemService(db, cache)
+        return await svc.create_item(
+            name=body.name,
+            price=body.price,
+            stock_quantity=body.stock_quantity,
+            description=body.description,
+            low_stock_threshold=body.low_stock_threshold,
+        )
+    except IntegrityError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"An item with the name '{body.name}' already exists.",
+        ) from e
 
 
 @router.get("", response_model=list[ItemResponse])
