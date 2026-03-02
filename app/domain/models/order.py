@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import CheckConstraint, ForeignKey, Integer, String
+from sqlalchemy import CheckConstraint, Enum, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base, TimestampMixin
@@ -20,7 +20,11 @@ class Order(Base, TimestampMixin):
     )
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
     status: Mapped[OrderStatus] = mapped_column(
-        String(20), nullable=False, default=OrderStatus.PENDING
+        # native_enum=False stores values as VARCHAR; SQLAlchemy then coerces
+        # the returned string back to an OrderStatus member automatically.
+        Enum(OrderStatus, native_enum=False, length=20),
+        nullable=False,
+        default=OrderStatus.PENDING,
     )
     customer_ref: Mapped[str | None] = mapped_column(String(255), nullable=True)
     version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)

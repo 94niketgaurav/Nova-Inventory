@@ -53,10 +53,12 @@ class AnalyticsService:
         row = result.one()
 
         # Revenue: price * quantity for DELIVERED orders
+        # Use select_from(Order) so SQLAlchemy knows the left side of the JOIN.
         rev_result = await self._session.execute(
             select(
                 func.coalesce(func.sum(MenuItem.price * Order.quantity), 0).label("revenue")
             )
+            .select_from(Order)
             .join(MenuItem, Order.item_id == MenuItem.id)
             .where(Order.status == OrderStatus.DELIVERED, Order.created_at >= since)
         )
@@ -67,6 +69,7 @@ class AnalyticsService:
             select(
                 func.coalesce(func.sum(MenuItem.price * Order.quantity), 0).label("refund")
             )
+            .select_from(Order)
             .join(MenuItem, Order.item_id == MenuItem.id)
             .where(Order.status == OrderStatus.CANCELLED, Order.created_at >= since)
         )
