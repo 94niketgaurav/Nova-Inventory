@@ -1,5 +1,6 @@
 import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.cache import CacheService, get_redis
 from app.core.exceptions import (
     ConflictError, InsufficientStockError, InvalidTransitionError, NotFoundError,
 )
@@ -15,11 +16,16 @@ logger = get_logger(__name__)
 
 
 class OrderService:
-    def __init__(self, session: AsyncSession) -> None:
+    def __init__(
+        self,
+        session: AsyncSession,
+        cache: CacheService | None = None,
+    ) -> None:
         self._session = session
         self._orders = OrderRepository(session)
         self._items = ItemRepository(session)
         self._stock = StockRepository(session)
+        self._cache = cache if cache is not None else CacheService(get_redis())
 
     async def place_order(
         self, item_id: uuid.UUID, quantity: int, customer_ref: str | None = None
@@ -82,6 +88,8 @@ class OrderService:
             )
         )
         await self._items.save(item)
+        # Write-through: sync cache immediately after stock deduction
+        await self._cache.set_stock(item.id, item.stock_quantity)
 
         updated = await self._orders.transition_status(
             order_id, order.version, OrderStatus.CONFIRMED
@@ -130,6 +138,8 @@ class OrderService:
                     )
                 )
                 await self._items.save(item)
+                # Write-through: sync cache after stock restoration
+                await self._cache.set_stock(item.id, item.stock_quantity)
                 logger.info(
                     "stock_restored",
                     order_id=str(order_id),

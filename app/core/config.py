@@ -16,9 +16,10 @@ class Settings(BaseSettings):
     db_user: str = "postgres"
     db_password: str = "postgres"
 
-    # Redis
+    # Redis / Cache
     redis_url: str = "redis://localhost:6379"
     cache_ttl_seconds: int = 300
+    enable_cache: bool = True   # Set ENABLE_CACHE=false to bypass Redis entirely
 
     # Auth
     require_auth: bool = False

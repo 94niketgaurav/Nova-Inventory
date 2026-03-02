@@ -1,7 +1,8 @@
 import uuid
 from decimal import Decimal
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.exceptions import NotFoundError
+from app.core.cache import CacheService, get_redis
+from app.core.exceptions import InsufficientStockError, NotFoundError
 from app.core.logging import get_logger
 from app.domain.enums import MovementType
 from app.domain.models.item import MenuItem
@@ -13,10 +14,17 @@ logger = get_logger(__name__)
 
 
 class ItemService:
-    def __init__(self, session: AsyncSession) -> None:
+    def __init__(
+        self,
+        session: AsyncSession,
+        cache: CacheService | None = None,
+    ) -> None:
         self._session = session
         self._items = ItemRepository(session)
         self._stock = StockRepository(session)
+        # Accept injected cache or fall back to global singleton.
+        # Pass CacheService(None) to disable caching for this instance.
+        self._cache = cache if cache is not None else CacheService(get_redis())
 
     async def create_item(
         self,
@@ -46,6 +54,8 @@ class ItemService:
                 reason="Initial stock on item creation",
             )
         )
+        # Write-through: prime cache with initial stock so next read is a hit
+        await self._cache.set_stock(item.id, item.stock_quantity)
         logger.info("item_created", item_id=str(item.id), name=name, stock=stock_quantity)
         return item
 
@@ -59,7 +69,6 @@ class ItemService:
         stock_before = item.stock_quantity
         new_quantity = stock_before + delta
         if new_quantity < 0:
-            from app.core.exceptions import InsufficientStockError
             raise InsufficientStockError(item_id, abs(delta), stock_before)
 
         item.stock_quantity = new_quantity
@@ -75,6 +84,8 @@ class ItemService:
             )
         )
         await self._items.save(item)
+        # Write-through: keep cache in sync after manual adjustment
+        await self._cache.set_stock(item.id, item.stock_quantity)
         logger.info(
             "stock_adjusted",
             item_id=str(item_id),
