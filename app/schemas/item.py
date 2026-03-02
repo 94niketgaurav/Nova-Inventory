@@ -11,10 +11,31 @@ class ItemCreate(BaseModel):
     stock_quantity: int = Field(..., ge=0)
     low_stock_threshold: int = Field(default=10, ge=0)
 
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "name": "Classic Burger",
+                "description": "200g beef patty with lettuce and tomato",
+                "price": "12.99",
+                "stock_quantity": 50,
+                "low_stock_threshold": 10,
+            }
+        }
+    )
+
 
 class ItemStockAdjust(BaseModel):
     delta: int = Field(..., description="Positive to add, negative to remove")
     reason: str = Field(..., min_length=1, max_length=500)
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "delta": -5,
+                "reason": "Damaged goods removed from stock",
+            }
+        }
+    )
 
 
 class ItemResponse(BaseModel):

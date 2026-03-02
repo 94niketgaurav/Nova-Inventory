@@ -9,6 +9,16 @@ class OrderCreate(BaseModel):
     quantity: int = Field(..., gt=0)
     customer_ref: str | None = Field(default=None, max_length=255)
 
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "item_id": "123e4567-e89b-12d3-a456-426614174000",
+                "quantity": 2,
+                "customer_ref": "CUST-001",
+            }
+        }
+    )
+
 
 class OrderResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)

@@ -1,0 +1,744 @@
+{
+  "info": {
+    "name": "Nova Inventory Service",
+    "description": "Inventory & Stock Consistency Service \u2014 atomic stock management, order lifecycle, write-through cache, analytics",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "nova-inventory-v0.1.0"
+  },
+  "item": [
+    {
+      "name": "Analytics",
+      "item": [
+        {
+          "name": "Analytics Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}",
+                "description": "Required when REQUIRE_AUTH=true",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8000/api/v1/analytics/summary",
+              "host": [
+                "http://localhost:8000"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "analytics",
+                "summary"
+              ],
+              "query": [
+                {
+                  "key": "days",
+                  "value": "",
+                  "description": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Stock Analytics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}",
+                "description": "Required when REQUIRE_AUTH=true",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8000/api/v1/analytics/stock",
+              "host": [
+                "http://localhost:8000"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "analytics",
+                "stock"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Order Analytics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}",
+                "description": "Required when REQUIRE_AUTH=true",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8000/api/v1/analytics/orders",
+              "host": [
+                "http://localhost:8000"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "analytics",
+                "orders"
+              ],
+              "query": [
+                {
+                  "key": "days",
+                  "value": "",
+                  "description": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Movement Analytics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}",
+                "description": "Required when REQUIRE_AUTH=true",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8000/api/v1/analytics/movements",
+              "host": [
+                "http://localhost:8000"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "analytics",
+                "movements"
+              ],
+              "query": [
+                {
+                  "key": "days",
+                  "value": "",
+                  "description": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        }
+      ],
+      "_postman_isSubFolder": false
+    },
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}",
+                "description": "Required when REQUIRE_AUTH=true",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8000/health",
+              "host": [
+                "http://localhost:8000"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        }
+      ],
+      "_postman_isSubFolder": false
+    },
+    {
+      "name": "Items",
+      "item": [
+        {
+          "name": "List Items",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}",
+                "description": "Required when REQUIRE_AUTH=true",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8000/api/v1/items",
+              "host": [
+                "http://localhost:8000"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "items"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Create Item",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}",
+                "description": "Required when REQUIRE_AUTH=true",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8000/api/v1/items",
+              "host": [
+                "http://localhost:8000"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "items"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"200g beef patty with lettuce and tomato\",\n  \"low_stock_threshold\": 10,\n  \"name\": \"Classic Burger\",\n  \"price\": \"12.99\",\n  \"stock_quantity\": 50\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Item",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}",
+                "description": "Required when REQUIRE_AUTH=true",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8000/api/v1/items/{item_id}",
+              "host": [
+                "http://localhost:8000"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "items",
+                "{item_id}"
+              ],
+              "variable": [
+                {
+                  "key": "item_id",
+                  "value": ":item_id",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Adjust Stock",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}",
+                "description": "Required when REQUIRE_AUTH=true",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8000/api/v1/items/{item_id}/stock",
+              "host": [
+                "http://localhost:8000"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "items",
+                "{item_id}",
+                "stock"
+              ],
+              "variable": [
+                {
+                  "key": "item_id",
+                  "value": ":item_id",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"delta\": -5,\n  \"reason\": \"Damaged goods removed from stock\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ],
+      "_postman_isSubFolder": false
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Place Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}",
+                "description": "Required when REQUIRE_AUTH=true",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8000/api/v1/orders",
+              "host": [
+                "http://localhost:8000"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_ref\": \"CUST-001\",\n  \"item_id\": \"123e4567-e89b-12d3-a456-426614174000\",\n  \"quantity\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Order",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}",
+                "description": "Required when REQUIRE_AUTH=true",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8000/api/v1/orders/{order_id}",
+              "host": [
+                "http://localhost:8000"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "{order_id}"
+              ],
+              "variable": [
+                {
+                  "key": "order_id",
+                  "value": ":order_id",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Transition",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}",
+                "description": "Required when REQUIRE_AUTH=true",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8000/api/v1/orders/{order_id}/confirm",
+              "host": [
+                "http://localhost:8000"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "{order_id}",
+                "confirm"
+              ],
+              "variable": [
+                {
+                  "key": "order_id",
+                  "value": ":order_id",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Transition",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}",
+                "description": "Required when REQUIRE_AUTH=true",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8000/api/v1/orders/{order_id}/ship",
+              "host": [
+                "http://localhost:8000"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "{order_id}",
+                "ship"
+              ],
+              "variable": [
+                {
+                  "key": "order_id",
+                  "value": ":order_id",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Transition",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}",
+                "description": "Required when REQUIRE_AUTH=true",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8000/api/v1/orders/{order_id}/deliver",
+              "host": [
+                "http://localhost:8000"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "{order_id}",
+                "deliver"
+              ],
+              "variable": [
+                {
+                  "key": "order_id",
+                  "value": ":order_id",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Transition",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}",
+                "description": "Required when REQUIRE_AUTH=true",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8000/api/v1/orders/{order_id}/cancel",
+              "host": [
+                "http://localhost:8000"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "{order_id}",
+                "cancel"
+              ],
+              "variable": [
+                {
+                  "key": "order_id",
+                  "value": ":order_id",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        }
+      ],
+      "_postman_isSubFolder": false
+    },
+    {
+      "name": "Stock",
+      "item": [
+        {
+          "name": "Low Stock Alerts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}",
+                "description": "Required when REQUIRE_AUTH=true",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8000/api/v1/stock/alerts/low",
+              "host": [
+                "http://localhost:8000"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stock",
+                "alerts",
+                "low"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Get Stock",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}",
+                "description": "Required when REQUIRE_AUTH=true",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8000/api/v1/stock/{item_id}",
+              "host": [
+                "http://localhost:8000"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stock",
+                "{item_id}"
+              ],
+              "variable": [
+                {
+                  "key": "item_id",
+                  "value": ":item_id",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Get Movements",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}",
+                "description": "Required when REQUIRE_AUTH=true",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8000/api/v1/stock/{item_id}/movements",
+              "host": [
+                "http://localhost:8000"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stock",
+                "{item_id}",
+                "movements"
+              ],
+              "variable": [
+                {
+                  "key": "item_id",
+                  "value": ":item_id",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        }
+      ],
+      "_postman_isSubFolder": false
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "api_key",
+      "value": "your-api-key-here",
+      "type": "string"
+    }
+  ],
+  "event": []
+}
