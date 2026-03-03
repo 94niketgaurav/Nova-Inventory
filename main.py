@@ -1,7 +1,7 @@
 # Copyright (c) 2026 Nova Inventory Service. All Rights Reserved.
-def main():
-    print("Hello from nova!")
+import uvicorn
 
+from app.main import app  # noqa: F401 — re-exported so PyCharm/uvicorn can discover it
 
 if __name__ == "__main__":
-    main()
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
