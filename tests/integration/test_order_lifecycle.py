@@ -1,6 +1,6 @@
+# Copyright (c) 2026 Nova Inventory Service. All Rights Reserved.
 import pytest
 from httpx import AsyncClient
-
 
 pytestmark = pytest.mark.asyncio
 

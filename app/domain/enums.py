@@ -1,7 +1,8 @@
+# Copyright (c) 2026 Nova Inventory Service. All Rights Reserved.
 import enum
 
 
-class OrderStatus(str, enum.Enum):
+class OrderStatus(enum.StrEnum):
     PENDING = "PENDING"
     CONFIRMED = "CONFIRMED"
     SHIPPED = "SHIPPED"
@@ -33,7 +34,7 @@ class OrderStatus(str, enum.Enum):
         return next_status in self.valid_transitions().get(self, frozenset())
 
 
-class MovementType(str, enum.Enum):
+class MovementType(enum.StrEnum):
     DEDUCTION = "DEDUCTION"
     RESTORATION = "RESTORATION"
     ADJUSTMENT = "ADJUSTMENT"

@@ -1,8 +1,9 @@
-import pytest
+# Copyright (c) 2026 Nova Inventory Service. All Rights Reserved.
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from app.middleware.auth import ApiKeyMiddleware
+
 from app.core.constants import Headers
+from app.middleware.auth import ApiKeyMiddleware
 
 
 def _make_app(require_auth: bool, valid_keys: set[str]) -> FastAPI:

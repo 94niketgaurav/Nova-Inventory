@@ -1,6 +1,8 @@
+# Copyright (c) 2026 Nova Inventory Service. All Rights Reserved.
 import time
 import uuid
 from contextlib import asynccontextmanager
+
 import structlog
 from alembic.config import Config as AlembicConfig
 from alembic.runtime.migration import MigrationContext
@@ -10,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
+
 from app.api.v1.router import api_router
 from app.core.cache import close_redis
 from app.core.config import settings

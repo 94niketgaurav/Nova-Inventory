@@ -1,5 +1,6 @@
-from app.domain.models.item import MenuItem
+# Copyright (c) 2026 Nova Inventory Service. All Rights Reserved.
 from app.domain.enums import OrderStatus
+from app.domain.models.item import MenuItem
 
 
 def test_menu_item_is_low_stock_true():

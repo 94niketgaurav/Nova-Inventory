@@ -1,5 +1,8 @@
+# Copyright (c) 2026 Nova Inventory Service. All Rights Reserved.
 import uuid
+
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.cache import CacheService, get_redis
 from app.core.exceptions import NotFoundError
 from app.domain.models.item import MenuItem

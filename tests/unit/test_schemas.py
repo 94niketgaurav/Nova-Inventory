@@ -1,11 +1,16 @@
+# Copyright (c) 2026 Nova Inventory Service. All Rights Reserved.
 import uuid
+from datetime import UTC, datetime
 from decimal import Decimal
-from datetime import datetime, timezone
+
+from app.schemas.analytics import (
+    AnalyticsSummary,
+    MovementAnalytics,
+    OrderAnalytics,
+    StockAnalytics,
+)
 from app.schemas.item import ItemCreate, ItemResponse
-from app.schemas.order import OrderCreate, OrderResponse
-from app.schemas.stock import StockResponse, StockMovementResponse
-from app.schemas.analytics import StockAnalytics, OrderAnalytics, AnalyticsSummary, MovementAnalytics
-from app.domain.enums import OrderStatus, MovementType
+from app.schemas.order import OrderCreate
 
 
 def test_item_create_validation():
@@ -21,7 +26,7 @@ def test_order_create_validation():
 
 
 def test_stock_response_from_attributes():
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     class FakeItem:
         id = uuid.uuid4()

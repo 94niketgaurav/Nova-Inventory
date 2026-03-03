@@ -1,0 +1,40 @@
+# .pre-commit-config.yaml
+# Run: uv run pre-commit install
+# Manual run: uv run pre-commit run --all-files
+
+repos:
+  # ── Secret scanning ────────────────────────────────────────────────────────
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.4
+    hooks:
+      - id: gitleaks
+
+  # ── Python linting and formatting ─────────────────────────────────────────
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.10
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+
+  # ── OpenAPI + Postman collection regeneration ──────────────────────────────
+  - repo: local
+    hooks:
+      - id: generate-openapi
+        name: Regenerate OpenAPI spec and Postman collection
+        language: system
+        entry: uv run python scripts/generate_postman.py
+        pass_filenames: false
+        files: ^app/
+        stages: [pre-commit]
+        always_run: false
+
+  # ── Copyright header check ────────────────────────────────────────────────
+  - repo: local
+    hooks:
+      - id: check-copyright
+        name: Check copyright headers
+        language: system
+        entry: uv run python scripts/check_copyright.py
+        types: [python]
+        exclude: ^(migrations/|\.venv/)

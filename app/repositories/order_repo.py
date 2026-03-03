@@ -1,8 +1,11 @@
+# Copyright (c) 2026 Nova Inventory Service. All Rights Reserved.
 import uuid
+
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.domain.models.order import Order
+
 from app.domain.enums import OrderStatus
+from app.domain.models.order import Order
 
 
 class OrderRepository:

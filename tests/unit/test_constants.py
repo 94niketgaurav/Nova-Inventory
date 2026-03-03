@@ -1,5 +1,7 @@
+# Copyright (c) 2026 Nova Inventory Service. All Rights Reserved.
 import uuid
-from app.core.constants import CacheKeys, Headers, RateLimits, LogFields
+
+from app.core.constants import CacheKeys, Headers, LogFields, RateLimits
 
 
 def test_stock_cache_key_format():

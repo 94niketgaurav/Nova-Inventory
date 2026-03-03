@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Nova Inventory Service. All Rights Reserved.
 """
 Plug-and-play Redis cache for stock quantities.
 
@@ -9,8 +10,10 @@ The global singleton `get_redis()` returns None when `settings.enable_cache=Fals
 so the rest of the app never needs to branch on cache availability — it just works.
 """
 import uuid
+
 import redis.asyncio as aioredis
 import structlog
+
 from app.core.config import settings
 from app.core.constants import CacheKeys
 

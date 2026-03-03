@@ -1,10 +1,13 @@
+# Copyright (c) 2026 Nova Inventory Service. All Rights Reserved.
 from collections.abc import AsyncGenerator
+
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
     async_sessionmaker,
     create_async_engine,
 )
+
 from app.core.config import settings
 
 # ── Singleton engine — created once, reused for the process lifetime ──────────
@@ -37,7 +40,7 @@ def get_session_factory() -> async_sessionmaker[AsyncSession]:
     return _session_factory
 
 
-async def get_db() -> AsyncGenerator[AsyncSession, None]:
+async def get_db() -> AsyncGenerator[AsyncSession]:
     """FastAPI dependency — yields a session, commits on success, rolls back on error."""
     async with _session_factory() as session:
         try:

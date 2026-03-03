@@ -1,6 +1,9 @@
+# Copyright (c) 2026 Nova Inventory Service. All Rights Reserved.
 import logging
 import sys
+
 import structlog
+
 from app.core.config import settings
 
 
@@ -26,7 +29,9 @@ def configure_logging() -> None:
         processors=processors,
         wrapper_class=structlog.make_filtering_bound_logger(log_level),
         context_class=dict,
-        logger_factory=structlog.PrintLoggerFactory(sys.stdout),
+        # stdlib LoggerFactory produces logging.Logger objects that have .name,
+        # which is required by the structlog.stdlib.add_logger_name processor.
+        logger_factory=structlog.stdlib.LoggerFactory(),
         cache_logger_on_first_use=True,
     )
 

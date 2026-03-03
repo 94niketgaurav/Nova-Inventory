@@ -1,4 +1,4 @@
-import pytest
+# Copyright (c) 2026 Nova Inventory Service. All Rights Reserved.
 from app.domain.enums import OrderStatus
 
 

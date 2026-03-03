@@ -1,7 +1,10 @@
-from datetime import datetime, timedelta, timezone
+# Copyright (c) 2026 Nova Inventory Service. All Rights Reserved.
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.domain.enums import MovementType, OrderStatus
 from app.domain.models.item import MenuItem
 from app.domain.models.order import Order
@@ -38,7 +41,7 @@ class AnalyticsService:
         )
 
     async def get_order_analytics(self, days: int = 30) -> OrderAnalytics:
-        since = datetime.now(timezone.utc) - timedelta(days=days)
+        since = datetime.now(UTC) - timedelta(days=days)
         result = await self._session.execute(
             select(
                 func.count(Order.id).label("total"),
@@ -88,7 +91,7 @@ class AnalyticsService:
         )
 
     async def get_movement_analytics(self, days: int = 30) -> MovementAnalytics:
-        since = datetime.now(timezone.utc) - timedelta(days=days)
+        since = datetime.now(UTC) - timedelta(days=days)
         result = await self._session.execute(
             select(
                 func.count(StockMovement.id).filter(

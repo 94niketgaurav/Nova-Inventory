@@ -1,7 +1,14 @@
+# Copyright (c) 2026 Nova Inventory Service. All Rights Reserved.
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.db.session import get_db
-from app.schemas.analytics import AnalyticsSummary, MovementAnalytics, OrderAnalytics, StockAnalytics
+from app.schemas.analytics import (
+    AnalyticsSummary,
+    MovementAnalytics,
+    OrderAnalytics,
+    StockAnalytics,
+)
 from app.services.analytics_service import AnalyticsService
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])

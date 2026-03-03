@@ -1,12 +1,14 @@
+# Copyright (c) 2026 Nova Inventory Service. All Rights Reserved.
 """
 Unit tests for CacheService — both enabled (mocked Redis) and disabled (None) modes.
 """
-import pytest
 import uuid
 from unittest.mock import AsyncMock
+
+import pytest
+
 from app.core.cache import CacheService
 from app.core.constants import CacheKeys
-
 
 # ── Enabled mode (Redis injected) ────────────────────────────────────────────
 

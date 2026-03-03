@@ -1,6 +1,9 @@
+# Copyright (c) 2026 Nova Inventory Service. All Rights Reserved.
 import uuid
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.domain.models.stock_movement import StockMovement
 
 

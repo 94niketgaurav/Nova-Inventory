@@ -1,4 +1,5 @@
-from app.domain.enums import OrderStatus, MovementType
+# Copyright (c) 2026 Nova Inventory Service. All Rights Reserved.
+from app.domain.enums import MovementType, OrderStatus
 
 
 def test_order_status_terminal_states():

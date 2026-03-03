@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Nova Inventory Service. All Rights Reserved.
 class NotFoundError(Exception):
     """Resource does not exist."""
     def __init__(self, resource: str, resource_id: object) -> None:

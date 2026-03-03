@@ -1,7 +1,9 @@
+# Copyright (c) 2026 Nova Inventory Service. All Rights Reserved.
 import uuid
-from decimal import Decimal
 from datetime import datetime
-from pydantic import BaseModel, Field, ConfigDict
+from decimal import Decimal
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ItemCreate(BaseModel):

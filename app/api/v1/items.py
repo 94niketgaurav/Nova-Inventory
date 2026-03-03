@@ -1,7 +1,10 @@
+# Copyright (c) 2026 Nova Inventory Service. All Rights Reserved.
 import uuid
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.api.v1.deps import get_cache
 from app.core.cache import CacheService
 from app.core.exceptions import InsufficientStockError, NotFoundError
@@ -44,7 +47,7 @@ async def get_item(item_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
     try:
         return await ItemService(db).get_item(item_id)
     except NotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e
 
 
 @router.patch("/{item_id}/stock", response_model=ItemResponse)
@@ -57,6 +60,6 @@ async def adjust_stock(
     try:
         return await ItemService(db, cache).adjust_stock(item_id, body.delta, body.reason)
     except NotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e
     except InsufficientStockError as e:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)) from e

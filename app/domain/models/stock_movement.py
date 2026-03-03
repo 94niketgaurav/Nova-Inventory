@@ -1,14 +1,18 @@
+# Copyright (c) 2026 Nova Inventory Service. All Rights Reserved.
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from sqlalchemy import DateTime, ForeignKey, Integer, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from app.db.base import Base
 from app.domain.enums import MovementType
 
 
 class StockMovement(Base):
     """Append-only audit log. Never UPDATE or DELETE rows."""
+
     __tablename__ = "stock_movements"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -27,9 +31,9 @@ class StockMovement(Base):
     reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
     )
 
-    item: Mapped["MenuItem"] = relationship(back_populates="stock_movements")
-    order: Mapped["Order | None"] = relationship(back_populates="stock_movements")
+    item: Mapped["MenuItem"] = relationship(back_populates="stock_movements")  # noqa: F821
+    order: Mapped["Order | None"] = relationship(back_populates="stock_movements")  # noqa: F821

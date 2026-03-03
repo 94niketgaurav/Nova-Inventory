@@ -1,8 +1,10 @@
+# Copyright (c) 2026 Nova Inventory Service. All Rights Reserved.
 """
 Edge case and boundary tests for the Nova Inventory Service.
 Uses the same client fixture from conftest.py.
 """
 import uuid
+
 import pytest
 from httpx import AsyncClient
 

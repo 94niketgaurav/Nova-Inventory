@@ -1,8 +1,11 @@
+# Copyright (c) 2026 Nova Inventory Service. All Rights Reserved.
 import uuid
 from decimal import Decimal
+
 from sqlalchemy import CheckConstraint, Integer, Numeric, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from app.db.base import Base, TimestampMixin
 
 
@@ -25,8 +28,8 @@ class MenuItem(Base, TimestampMixin):
     low_stock_threshold: Mapped[int] = mapped_column(Integer, nullable=False, default=10)
     version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
 
-    orders: Mapped[list["Order"]] = relationship(back_populates="item")
-    stock_movements: Mapped[list["StockMovement"]] = relationship(back_populates="item")
+    orders: Mapped[list["Order"]] = relationship(back_populates="item")  # noqa: F821
+    stock_movements: Mapped[list["StockMovement"]] = relationship(back_populates="item")  # noqa: F821
 
     def __init__(self, **kwargs: object) -> None:
         kwargs.setdefault("stock_quantity", 0)

@@ -1,4 +1,6 @@
+# Copyright (c) 2026 Nova Inventory Service. All Rights Reserved.
 from functools import lru_cache
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 

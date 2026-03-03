@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Nova Inventory Service. All Rights Reserved.
 """
 Single source of truth for all string constants used across the application.
 Import from here — never hardcode these strings in business logic.

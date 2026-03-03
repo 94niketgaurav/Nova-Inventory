@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Nova Inventory Service. All Rights Reserved.
 """
 Generates a Postman Collection v2.1 JSON from the FastAPI OpenAPI spec.
 

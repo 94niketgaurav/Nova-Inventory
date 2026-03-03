@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Nova Inventory Service. All Rights Reserved.
 """
 Integration tests for the analytics endpoints.
 

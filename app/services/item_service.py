@@ -1,6 +1,9 @@
+# Copyright (c) 2026 Nova Inventory Service. All Rights Reserved.
 import uuid
 from decimal import Decimal
+
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.cache import CacheService, get_redis
 from app.core.exceptions import InsufficientStockError, NotFoundError
 from app.core.logging import get_logger

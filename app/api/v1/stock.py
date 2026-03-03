@@ -1,8 +1,11 @@
+# Copyright (c) 2026 Nova Inventory Service. All Rights Reserved.
 import uuid
+
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.api.v1.deps import get_cache
 from app.core.cache import CacheService
 from app.core.config import settings
@@ -37,7 +40,7 @@ async def get_stock(
             is_low_stock=item.is_low_stock,
         )
     except NotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e
 
 
 @router.get("/{item_id}/movements", response_model=list[StockMovementResponse])
@@ -45,4 +48,4 @@ async def get_movements(item_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
     try:
         return await StockService(db).get_movements(item_id)
     except NotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e

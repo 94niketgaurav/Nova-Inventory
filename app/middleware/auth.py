@@ -1,6 +1,8 @@
+# Copyright (c) 2026 Nova Inventory Service. All Rights Reserved.
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
+
 from app.core.constants import Headers
 
 # Routes that are always public regardless of auth setting

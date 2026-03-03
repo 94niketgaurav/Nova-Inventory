@@ -1,11 +1,12 @@
+# Copyright (c) 2026 Nova Inventory Service. All Rights Reserved.
 """
 Race condition tests — verify SELECT FOR UPDATE prevents oversell
 and optimistic locking prevents double-cancel.
 """
 import asyncio
+
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
-
 
 pytestmark = pytest.mark.asyncio
 
@@ -16,8 +17,8 @@ async def test_concurrent_orders_no_oversell(db_engine):
     Exactly 5 must succeed; 5 must be rejected/fail.
     Stock must be exactly 0 at the end — never negative.
     """
-    STOCK = 5
-    NUM_ORDERS = 10
+    stock = 5
+    num_orders = 10
 
     def make_factory():
         return async_sessionmaker(bind=db_engine, class_=AsyncSession, expire_on_commit=False)
@@ -25,8 +26,9 @@ async def test_concurrent_orders_no_oversell(db_engine):
     # Create item
     async with make_factory()() as session:
         from app.services.item_service import ItemService
+
         item = await ItemService(session).create_item(
-            "Race Item", price=5.0, stock_quantity=STOCK
+            "Race Item", price=5.0, stock_quantity=stock
         )
         await session.commit()
         item_id = item.id
@@ -35,8 +37,9 @@ async def test_concurrent_orders_no_oversell(db_engine):
     order_ids = []
     async with make_factory()() as session:
         from app.services.order_service import OrderService
+
         svc = OrderService(session)
-        for _ in range(NUM_ORDERS):
+        for _ in range(num_orders):
             order = await svc.place_order(item_id, quantity=1)
             order_ids.append(order.id)
         await session.commit()
@@ -45,6 +48,7 @@ async def test_concurrent_orders_no_oversell(db_engine):
     async def try_confirm(order_id):
         async with make_factory()() as session:
             from app.services.order_service import OrderService
+
             svc = OrderService(session)
             try:
                 result = await svc.confirm_order(order_id)
@@ -62,12 +66,13 @@ async def test_concurrent_orders_no_oversell(db_engine):
     successes = [r for r in results if not isinstance(r, Exception)]
     failures = [r for r in results if isinstance(r, Exception)]
 
-    assert len(successes) == STOCK, f"Expected {STOCK} successes, got {len(successes)}: {failures}"
-    assert len(failures) == NUM_ORDERS - STOCK
+    assert len(successes) == stock, f"Expected {stock} successes, got {len(successes)}: {failures}"
+    assert len(failures) == num_orders - stock
 
     # Final stock must be exactly 0 — never negative
     async with make_factory()() as session:
         from app.repositories.item_repo import ItemRepository
+
         final = await ItemRepository(session).get_by_id(item_id)
         assert final.stock_quantity == 0, f"Expected 0, got {final.stock_quantity}"
         assert final.stock_quantity >= 0, "Stock went negative — oversell!"
@@ -78,8 +83,8 @@ async def test_concurrent_cancellations_no_double_restore(db_engine):
     Two concurrent cancel requests for the same confirmed order.
     Only one must succeed; stock restored exactly once.
     """
-    INITIAL_STOCK = 10
-    ORDER_QTY = 3
+    initial_stock = 10
+    order_qty = 3
 
     def make_factory():
         return async_sessionmaker(bind=db_engine, class_=AsyncSession, expire_on_commit=False)
@@ -88,15 +93,17 @@ async def test_concurrent_cancellations_no_double_restore(db_engine):
     async with make_factory()() as session:
         from app.services.item_service import ItemService
         from app.services.order_service import OrderService
+
         item = await ItemService(session).create_item(
-            "Cancel Race Item", price=5.0, stock_quantity=INITIAL_STOCK
+            "Cancel Race Item", price=5.0, stock_quantity=initial_stock
         )
-        order = await OrderService(session).place_order(item.id, ORDER_QTY)
+        order = await OrderService(session).place_order(item.id, order_qty)
         await session.commit()
         item_id, order_id = item.id, order.id
 
     async with make_factory()() as session:
         from app.services.order_service import OrderService
+
         await OrderService(session).confirm_order(order_id)
         await session.commit()
 
@@ -104,6 +111,7 @@ async def test_concurrent_cancellations_no_double_restore(db_engine):
     async def try_cancel(oid):
         async with make_factory()() as session:
             from app.services.order_service import OrderService
+
             try:
                 result = await OrderService(session).cancel_order(oid)
                 await session.commit()
@@ -120,8 +128,9 @@ async def test_concurrent_cancellations_no_double_restore(db_engine):
     successes = [r for r in results if not isinstance(r, Exception)]
     assert len(successes) == 1, "Exactly one cancel should succeed"
 
-    # Stock restored exactly once → back to INITIAL_STOCK - ORDER_QTY (stock after confirm) + ORDER_QTY = INITIAL_STOCK
+    # Stock restored exactly once → back to initial_stock - order_qty (stock after confirm) + order_qty = initial_stock
     async with make_factory()() as session:
         from app.repositories.item_repo import ItemRepository
+
         final = await ItemRepository(session).get_by_id(item_id)
-        assert final.stock_quantity == INITIAL_STOCK
+        assert final.stock_quantity == initial_stock

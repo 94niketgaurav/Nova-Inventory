@@ -1,10 +1,12 @@
-from datetime import datetime, timezone
+# Copyright (c) 2026 Nova Inventory Service. All Rights Reserved.
+from datetime import UTC, datetime
+
 from sqlalchemy import DateTime
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
 def utc_now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class Base(DeclarativeBase):

@@ -1,6 +1,9 @@
+# Copyright (c) 2026 Nova Inventory Service. All Rights Reserved.
 import uuid
 from datetime import datetime
+
 from pydantic import BaseModel, ConfigDict
+
 from app.domain.enums import MovementType
 
 
