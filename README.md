@@ -7,13 +7,15 @@ A production-ready **Inventory & Stock Consistency Service** built with Python 3
 ## Table of Contents
 
 - [Architecture](#architecture)
+- [Order State Machine](#order-state-machine)
+- [Locking & Concurrency](#locking--concurrency)
 - [Folder Structure](#folder-structure)
 - [Quick Start — Local Dev](#quick-start--local-dev)
-- [Quick Start — Docker](#quick-start--docker)
+- [Python Version](#python-version)
 - [Environment Variables](#environment-variables)
 - [API Endpoints](#api-endpoints)
 - [API Documentation](#api-documentation)
-- [Locking & Concurrency](#locking--concurrency)
+- [Quick Start — Docker](#quick-start--docker)
 - [Caching](#caching)
 - [Auth & Rate Limiting](#auth--rate-limiting)
 - [Testing](#testing)
@@ -94,6 +96,45 @@ A production-ready **Inventory & Stock Consistency Service** built with Python 3
 
 ---
 
+## Order State Machine
+
+```
+                   [stock < qty]
+  PENDING ─────────────────────────────────────► REJECTED  ─ (terminal)
+     │
+     │  confirm_order()
+     │  SELECT FOR UPDATE on menu_items row
+     │  Deduct stock atomically + write StockMovement
+     ▼
+  CONFIRMED ──► ship_order() ──► SHIPPED ──► deliver_order() ──► DELIVERED ─ (terminal)
+     │                              │
+     │  cancel_order()              │  cancel_order()
+     └──────────────────────────────┴──────────────────────────► CANCELLED ─ (terminal)
+                                                   (stock restored via StockMovement)
+```
+
+**Rules:**
+- Stock is deducted **only** on `PENDING → CONFIRMED`
+- Stock is restored **only** on cancellation from `CONFIRMED`, `SHIPPED`, or `DELIVERED`
+- Cancelling a `PENDING` order does **not** restore stock (none was deducted)
+- `REJECTED`, `DELIVERED`, and `CANCELLED` are terminal — no further transitions
+
+---
+
+## Locking & Concurrency
+
+| Scenario | Strategy | Why |
+|---|---|---|
+| Concurrent `confirm_order` | **Pessimistic — `SELECT FOR UPDATE`** | Holds a row-level exclusive lock for the full transaction, preventing two confirms from both reading the same stock level simultaneously |
+| State transitions | **Optimistic — `version` field** | Low-contention; `UPDATE orders SET version=v+1 WHERE version=v` — if 0 rows affected, another transaction won the race → `ConflictError` |
+| Manual stock adjust | **Pessimistic — `SELECT FOR UPDATE`** | Same safety guarantee as confirm |
+
+**Race condition tests** — see [`tests/integration/test_concurrent_orders.py`](./tests/integration/test_concurrent_orders.py):
+- `test_concurrent_orders_no_oversell` — 10 concurrent confirms against stock=5 → exactly 5 succeed, stock=0, never negative
+- `test_concurrent_cancellations_no_double_restore` — 2 concurrent cancels → exactly 1 succeeds, stock restored once
+
+---
+
 ## Folder Structure
 
 ```
@@ -169,7 +210,7 @@ Nova/
 
 ### Prerequisites
 
-- **Python 3.13+** ([python.org](https://www.python.org/downloads/))
+- **Python 3.13+** — see [Python Version](#python-version) below
 - **[uv](https://docs.astral.sh/uv/)** — fast Python package manager
 - **PostgreSQL 16** running locally (default: `localhost:5432`, user `postgres`, password `postgres`)
 - **Redis** running locally (default: `localhost:6379`) — optional, set `ENABLE_CACHE=false` to skip
@@ -184,10 +225,13 @@ uv sync --all-groups
 # 3. Create the database
 psql -U postgres -c "CREATE DATABASE nova_inventory;"
 
-# 4. Run migrations
+# 4. Copy environment config
+cp .env.example .env
+
+# 5. Run migrations
 uv run alembic upgrade head
 
-# 5. Start the server
+# 6. Start the server
 uv run uvicorn app.main:app --reload
 
 # Server is live at http://localhost:8000
@@ -196,44 +240,27 @@ uv run uvicorn app.main:app --reload
 # Health:      http://localhost:8000/health
 ```
 
-### Python Version
+---
+
+## Python Version
 
 This project requires **Python 3.13** or later. It uses modern syntax exclusively:
 - `str | None` instead of `Optional[str]`
 - `list[X]` / `dict[K, V]` instead of `List[X]` / `Dict[K, V]`
-- `match` statements, `tomllib`, and other 3.10+ features
-
-Check your version:
-```bash
-python --version   # must be 3.13+
-uv python pin 3.13 # pin via uv if needed
-```
-
----
-
-## Quick Start — Docker
-
-Requires Docker + Docker Compose.
+- `match` statements and other 3.10+ features
 
 ```bash
-# Build and start all services (Postgres + Redis + API)
-docker compose up --build
+# Check your version
+python --version        # must be 3.13+
 
-# The API waits for healthy DB/Redis, runs migrations, then starts.
-# Swagger UI: http://localhost:8000/docs
+# Pin via uv if needed
+uv python pin 3.13
 
-# Stop
-docker compose down
-
-# Stop and wipe volumes
-docker compose down -v
+# Install a specific version via uv
+uv python install 3.13
 ```
 
-The `Dockerfile` is a **multi-stage build**:
-- **Stage 1 (builder)**: Uses `uv` to install production deps into `.venv`
-- **Stage 2 (runtime)**: Copies only `.venv` + app code — **no uv, no pip, no build tools in the final image**
-
-See [`Dockerfile`](./Dockerfile) and [`docker-compose.yml`](./docker-compose.yml).
+The `.python-version` file in the repo root pins the version for `uv` and `pyenv` automatically.
 
 ---
 
@@ -310,7 +337,7 @@ Copy `.env.example` to `.env` for local overrides.
 ## API Documentation
 
 ### Interactive Swagger UI
-The live server exposes full interactive documentation at **`http://localhost:8000/docs`**.  
+The live server exposes full interactive documentation at **`http://localhost:8000/docs`**.
 It is always in sync with the code — no manual updates needed.
 
 ### Static Exports
@@ -336,42 +363,29 @@ uv run python scripts/generate_postman.py
 
 ---
 
-## Order State Machine
+## Quick Start — Docker
 
+Requires Docker + Docker Compose.
+
+```bash
+# Build and start all services (Postgres + Redis + API)
+docker compose up --build
+
+# The API waits for healthy DB/Redis, runs migrations, then starts.
+# Swagger UI: http://localhost:8000/docs
+
+# Stop
+docker compose down
+
+# Stop and wipe volumes
+docker compose down -v
 ```
-                   [stock < qty]
-  PENDING ─────────────────────────────────────► REJECTED  ─ (terminal)
-     │
-     │  confirm_order()
-     │  SELECT FOR UPDATE on menu_items row
-     │  Deduct stock atomically + write StockMovement
-     ▼
-  CONFIRMED ──► ship_order() ──► SHIPPED ──► deliver_order() ──► DELIVERED ─ (terminal)
-     │                              │
-     │  cancel_order()              │  cancel_order()
-     └──────────────────────────────┴──────────────────────────► CANCELLED ─ (terminal)
-                                                   (stock restored via StockMovement)
-```
 
-**Rules:**
-- Stock is deducted **only** on `PENDING → CONFIRMED`
-- Stock is restored **only** on cancellation from `CONFIRMED`, `SHIPPED`, or `DELIVERED`
-- Cancelling a `PENDING` order does **not** restore stock (none was deducted)
-- `REJECTED`, `DELIVERED`, and `CANCELLED` are terminal — no further transitions
+The `Dockerfile` is a **multi-stage build**:
+- **Stage 1 (builder)**: Uses `uv` to install production deps into `.venv`
+- **Stage 2 (runtime)**: Copies only `.venv` + app code — **no uv, no pip, no build tools in the final image**
 
----
-
-## Locking & Concurrency
-
-| Scenario | Strategy | Why |
-|---|---|---|
-| Concurrent `confirm_order` | **Pessimistic — `SELECT FOR UPDATE`** | Holds a row-level exclusive lock for the full transaction, preventing two confirms from both reading the same stock level simultaneously |
-| State transitions | **Optimistic — `version` field** | Low-contention; `UPDATE orders SET version=v+1 WHERE version=v` — if 0 rows affected, another transaction won the race → `ConflictError` |
-| Manual stock adjust | **Pessimistic — `SELECT FOR UPDATE`** | Same safety guarantee as confirm |
-
-**Race condition tests** — see [`tests/integration/test_concurrent_orders.py`](./tests/integration/test_concurrent_orders.py):
-- `test_concurrent_orders_no_oversell` — 10 concurrent confirms against stock=5 → exactly 5 succeed, stock=0, never negative
-- `test_concurrent_cancellations_no_double_restore` — 2 concurrent cancels → exactly 1 succeeds, stock restored once
+See [`Dockerfile`](./Dockerfile) and [`docker-compose.yml`](./docker-compose.yml).
 
 ---
 
@@ -431,7 +445,7 @@ uv run pytest tests/ --cov=app --cov-report=html -v
 
 ### Test Database
 
-Integration tests connect to `postgresql+asyncpg://postgres@localhost/nova_test` by default.  
+Integration tests connect to `postgresql+asyncpg://postgres@localhost/nova_test` by default.
 Override with `TEST_DATABASE_URL` env var. If Docker is available, tests spin up a disposable container automatically via `testcontainers`.
 
 Each test runs inside a **rolled-back transaction** — no cleanup fixtures needed, full isolation guaranteed.
@@ -458,6 +472,7 @@ Hooks configured in [`.pre-commit-config.yaml`](./.pre-commit-config.yaml):
 | `ruff-format` | Formats Python code (replaces black) |
 | `gitleaks` | Scans for accidental secrets / credentials in committed files |
 | `generate-openapi` | Regenerates `docs/openapi.json` and `docs/postman_collection.json` when schemas change |
+| `check-copyright` | Blocks commits missing the copyright header on any `.py` file |
 
 ---
 
