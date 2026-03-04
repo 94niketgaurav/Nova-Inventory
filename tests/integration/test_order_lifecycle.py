@@ -112,3 +112,51 @@ async def test_stock_movement_audit_trail(client: AsyncClient):
     types = [m["movement_type"] for m in movements]
     assert "DEDUCTION" in types
     assert "RESTORATION" in types
+
+
+async def test_rejected_order_status_is_persisted(client: AsyncClient):
+    """
+    After a confirm fails due to insufficient stock (→ HTTP 422), the order
+    status must be REJECTED — not left as PENDING.
+
+    This covers the get_db() commit-on-HTTPException fix: without it the
+    transition_status(REJECTED) update was rolled back, leaving the order
+    stuck in PENDING forever.
+    """
+    item = await _create_item(client, stock=1, name="Reject Persist Item")
+    order = await _place_order(client, item["id"], qty=99)
+
+    r = await client.post(f"/api/v1/orders/{order['id']}/confirm")
+    assert r.status_code == 422  # Insufficient stock
+
+    # Order must now be REJECTED, not PENDING
+    detail = (await client.get(f"/api/v1/orders/{order['id']}")).json()
+    assert detail["status"] == "REJECTED", (
+        f"Expected REJECTED, got {detail['status']} — "
+        "check get_db() commits on HTTPException"
+    )
+
+    # Stock untouched
+    stock = (await client.get(f"/api/v1/stock/{item['id']}")).json()
+    assert stock["stock_quantity"] == 1
+
+
+async def test_cancel_shipped_order_creates_restoration_movement(client: AsyncClient):
+    """
+    Cancelling a SHIPPED order must create a RESTORATION movement in the audit
+    trail, not just restore the stock_quantity number.
+    """
+    item = await _create_item(client, stock=10, name="Shipped Cancel Audit")
+    order = await _place_order(client, item["id"], qty=4)
+    await client.post(f"/api/v1/orders/{order['id']}/confirm")
+    await client.post(f"/api/v1/orders/{order['id']}/ship")
+    await client.post(f"/api/v1/orders/{order['id']}/cancel")
+
+    movements = (await client.get(f"/api/v1/stock/{item['id']}/movements")).json()
+    types = [m["movement_type"] for m in movements]
+    assert "DEDUCTION" in types
+    assert "RESTORATION" in types
+
+    restoration = next(m for m in movements if m["movement_type"] == "RESTORATION")
+    assert restoration["quantity_delta"] == 4
+    assert restoration["stock_after"] == 10

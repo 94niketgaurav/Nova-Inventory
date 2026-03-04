@@ -223,3 +223,145 @@ async def test_sequential_orders_deplete_stock_correctly(client: AsyncClient):
 
     stock = (await client.get(f"/api/v1/stock/{item['id']}")).json()
     assert stock["stock_quantity"] == 2
+
+
+# ── List Orders Endpoint ───────────────────────────────────────────────────────
+
+async def test_list_orders_no_filter_returns_all(client: AsyncClient):
+    """GET /orders includes all orders created for our test item (DB may have other rows)."""
+    item = await _create_item(client)
+    o1 = await _place_order(client, item["id"], quantity=1)
+    o2 = await _place_order(client, item["id"], quantity=2)
+    o3 = await _place_order(client, item["id"], quantity=3)
+
+    r = await client.get("/api/v1/orders")
+    assert r.status_code == 200
+    # Filter to our item only (DB may have pre-existing rows from other tests)
+    our_ids = {o1["id"], o2["id"], o3["id"]}
+    returned_ids = {o["id"] for o in r.json()}
+    assert our_ids.issubset(returned_ids)
+
+
+async def test_list_orders_filter_by_status(client: AsyncClient):
+    """?status= filter: our confirmed order appears in CONFIRMED, our pending in PENDING."""
+    item = await _create_item(client)
+    o1 = await _place_order(client, item["id"], quantity=1)
+    o2 = await _place_order(client, item["id"], quantity=1)
+    await client.post(f"/api/v1/orders/{o1['id']}/confirm")  # o1 → CONFIRMED
+
+    confirmed = (await client.get("/api/v1/orders?status=CONFIRMED")).json()
+    pending = (await client.get("/api/v1/orders?status=PENDING")).json()
+
+    # Every returned order must have the correct status
+    assert all(o["status"] == "CONFIRMED" for o in confirmed)
+    assert all(o["status"] == "PENDING" for o in pending)
+    # Our specific orders must be in the right bucket
+    assert any(o["id"] == o1["id"] for o in confirmed)
+    assert any(o["id"] == o2["id"] for o in pending)
+
+
+async def test_list_orders_filter_by_customer_ref(client: AsyncClient):
+    """?customer_ref= returns only orders matching that ref (unique per test run)."""
+    unique_ref = f"TEST-{uuid.uuid4().hex[:8]}"
+    item = await _create_item(client)
+    await client.post("/api/v1/orders", json={
+        "item_id": item["id"], "quantity": 1, "customer_ref": unique_ref,
+    })
+    await client.post("/api/v1/orders", json={
+        "item_id": item["id"], "quantity": 1, "customer_ref": "OTHER-REF",
+    })
+    await client.post("/api/v1/orders", json={
+        "item_id": item["id"], "quantity": 1, "customer_ref": unique_ref,
+    })
+
+    r = await client.get(f"/api/v1/orders?customer_ref={unique_ref}")
+    assert r.status_code == 200
+    orders = r.json()
+    assert len(orders) == 2
+    assert all(o["customer_ref"] == unique_ref for o in orders)
+
+
+async def test_list_orders_empty_result_returns_empty_list(client: AsyncClient):
+    """A customer_ref that was never used returns [] not 404."""
+    nonexistent_ref = f"GHOST-{uuid.uuid4().hex}"
+    r = await client.get(f"/api/v1/orders?customer_ref={nonexistent_ref}")
+    assert r.status_code == 200
+    assert r.json() == []
+
+
+async def test_list_orders_combined_filters(client: AsyncClient):
+    """?status=PENDING&customer_ref=X returns only the single matching order."""
+    unique_ref = f"COMBO-{uuid.uuid4().hex[:8]}"
+    item = await _create_item(client)
+    o1 = (await client.post("/api/v1/orders", json={
+        "item_id": item["id"], "quantity": 1, "customer_ref": unique_ref,
+    })).json()
+    o2 = (await client.post("/api/v1/orders", json={
+        "item_id": item["id"], "quantity": 1, "customer_ref": unique_ref,
+    })).json()
+    # Confirm o2 so it's no longer PENDING
+    await client.post(f"/api/v1/orders/{o2['id']}/confirm")
+
+    r = await client.get(f"/api/v1/orders?status=PENDING&customer_ref={unique_ref}")
+    assert r.status_code == 200
+    orders = r.json()
+    assert len(orders) == 1
+    assert orders[0]["id"] == o1["id"]
+
+
+# ── Order Detail Endpoint ─────────────────────────────────────────────────────
+
+async def test_get_order_detail_includes_item_info(client: AsyncClient):
+    """GET /orders/{id} returns item_name, item_price, and total_value = price × qty."""
+    item = (await client.post("/api/v1/items", json={
+        "name": "Detail Price Item", "price": "12.50",
+        "stock_quantity": 30, "low_stock_threshold": 5,
+    })).json()
+    order = await _place_order(client, item["id"], quantity=4)
+
+    r = await client.get(f"/api/v1/orders/{order['id']}")
+    assert r.status_code == 200
+    d = r.json()
+    assert d["item_name"] == "Detail Price Item"
+    assert float(d["item_price"]) == 12.50
+    assert float(d["total_value"]) == 50.00  # 12.50 × 4
+
+
+async def test_get_order_detail_movements_populated_after_confirm(client: AsyncClient):
+    """After confirm, movements[] must contain exactly one DEDUCTION entry."""
+    item = await _create_item(client, stock_quantity=20)
+    order = await _place_order(client, item["id"], quantity=5)
+    await client.post(f"/api/v1/orders/{order['id']}/confirm")
+
+    r = await client.get(f"/api/v1/orders/{order['id']}")
+    assert r.status_code == 200
+    d = r.json()
+    assert len(d["movements"]) == 1
+    mv = d["movements"][0]
+    assert mv["movement_type"] == "DEDUCTION"
+    assert mv["quantity_delta"] == -5
+    assert mv["stock_after"] == d["movements"][0]["stock_before"] - 5
+
+
+async def test_get_order_detail_movements_after_cancel(client: AsyncClient):
+    """After confirm then cancel, movements[] has DEDUCTION + RESTORATION."""
+    item = await _create_item(client, stock_quantity=20)
+    order = await _place_order(client, item["id"], quantity=3)
+    await client.post(f"/api/v1/orders/{order['id']}/confirm")
+    await client.post(f"/api/v1/orders/{order['id']}/cancel")
+
+    r = await client.get(f"/api/v1/orders/{order['id']}")
+    assert r.status_code == 200
+    types = [m["movement_type"] for m in r.json()["movements"]]
+    assert "DEDUCTION" in types
+    assert "RESTORATION" in types
+
+
+async def test_get_order_detail_pending_has_no_movements(client: AsyncClient):
+    """A newly placed (PENDING) order has zero movements — stock not yet deducted."""
+    item = await _create_item(client)
+    order = await _place_order(client, item["id"], quantity=2)
+
+    r = await client.get(f"/api/v1/orders/{order['id']}")
+    assert r.status_code == 200
+    assert r.json()["movements"] == []
