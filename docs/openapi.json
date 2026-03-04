@@ -167,6 +167,135 @@
       }
     },
     "/api/v1/orders": {
+      "get": {
+        "tags": [
+          "orders"
+        ],
+        "summary": "List orders",
+        "description": "Returns orders with optional filters. Use `date` for a specific calendar day, or `from_date`/`to_date` for a custom range. All datetime values are UTC.",
+        "operationId": "list_orders_api_v1_orders_get",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/OrderStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by order status",
+              "title": "Status"
+            },
+            "description": "Filter by order status"
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Exact calendar day (YYYY-MM-DD, UTC)",
+              "title": "Date"
+            },
+            "description": "Exact calendar day (YYYY-MM-DD, UTC)"
+          },
+          {
+            "name": "from_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Range start (ISO 8601 UTC)",
+              "title": "From Date"
+            },
+            "description": "Range start (ISO 8601 UTC)"
+          },
+          {
+            "name": "to_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Range end (ISO 8601 UTC)",
+              "title": "To Date"
+            },
+            "description": "Range end (ISO 8601 UTC)"
+          },
+          {
+            "name": "customer_ref",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by customer reference",
+              "title": "Customer Ref"
+            },
+            "description": "Filter by customer reference"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OrderResponse"
+                  },
+                  "title": "Response List Orders Api V1 Orders Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "tags": [
           "orders"
@@ -174,14 +303,14 @@
         "summary": "Place Order",
         "operationId": "place_order_api_v1_orders_post",
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/OrderCreate"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "201": {
@@ -212,7 +341,8 @@
         "tags": [
           "orders"
         ],
-        "summary": "Get Order",
+        "summary": "Get order detail",
+        "description": "Full order detail including item name, unit price, total value, and stock movement audit trail.",
         "operationId": "get_order_api_v1_orders__order_id__get",
         "parameters": [
           {
@@ -232,7 +362,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/OrderResponse"
+                  "$ref": "#/components/schemas/OrderDetailResponse"
                 }
               }
             }
@@ -733,7 +863,33 @@
           "orders",
           "movements"
         ],
-        "title": "AnalyticsSummary"
+        "title": "AnalyticsSummary",
+        "example": {
+          "movements": {
+            "net_stock_change": -15,
+            "total_adjustments": 12,
+            "total_deductions": 7,
+            "total_restorations": 2
+          },
+          "orders": {
+            "cancelled": 2,
+            "confirmed": 2,
+            "delivered": 5,
+            "pending": 2,
+            "refund_value": "46.99",
+            "rejected": 2,
+            "revenue": "189.81",
+            "shipped": 2,
+            "total_orders": 17
+          },
+          "stock": {
+            "low_stock_count": 3,
+            "out_of_stock_count": 1,
+            "total_items": 12,
+            "total_units": 285,
+            "total_value": "2458.75"
+          }
+        }
       },
       "HTTPValidationError": {
         "properties": {
@@ -874,7 +1030,19 @@
           "created_at",
           "updated_at"
         ],
-        "title": "ItemResponse"
+        "title": "ItemResponse",
+        "example": {
+          "created_at": "2026-03-04T10:00:00Z",
+          "description": "200g beef patty with lettuce and tomato",
+          "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+          "is_low_stock": false,
+          "low_stock_threshold": 10,
+          "name": "Classic Burger",
+          "price": "12.99",
+          "stock_quantity": 50,
+          "updated_at": "2026-03-04T10:00:00Z",
+          "version": 1
+        }
       },
       "ItemStockAdjust": {
         "properties": {
@@ -928,7 +1096,13 @@
           "stock_quantity",
           "low_stock_threshold"
         ],
-        "title": "LowStockAlert"
+        "title": "LowStockAlert",
+        "example": {
+          "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+          "low_stock_threshold": 10,
+          "name": "Classic Burger",
+          "stock_quantity": 3
+        }
       },
       "MovementAnalytics": {
         "properties": {
@@ -956,7 +1130,13 @@
           "total_adjustments",
           "net_stock_change"
         ],
-        "title": "MovementAnalytics"
+        "title": "MovementAnalytics",
+        "example": {
+          "net_stock_change": -15,
+          "total_adjustments": 12,
+          "total_deductions": 7,
+          "total_restorations": 2
+        }
       },
       "MovementType": {
         "type": "string",
@@ -1020,7 +1200,18 @@
           "revenue",
           "refund_value"
         ],
-        "title": "OrderAnalytics"
+        "title": "OrderAnalytics",
+        "example": {
+          "cancelled": 2,
+          "confirmed": 2,
+          "delivered": 5,
+          "pending": 2,
+          "refund_value": "46.99",
+          "rejected": 2,
+          "revenue": "189.81",
+          "shipped": 2,
+          "total_orders": 17
+        }
       },
       "OrderCreate": {
         "properties": {
@@ -1057,6 +1248,104 @@
           "customer_ref": "CUST-001",
           "item_id": "123e4567-e89b-12d3-a456-426614174000",
           "quantity": 2
+        }
+      },
+      "OrderDetailResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "item_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Item Id"
+          },
+          "item_name": {
+            "type": "string",
+            "title": "Item Name"
+          },
+          "item_price": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Item Price"
+          },
+          "quantity": {
+            "type": "integer",
+            "title": "Quantity"
+          },
+          "total_value": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Value"
+          },
+          "status": {
+            "$ref": "#/components/schemas/OrderStatus"
+          },
+          "customer_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Ref"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "movements": {
+            "items": {
+              "$ref": "#/components/schemas/StockMovementResponse"
+            },
+            "type": "array",
+            "title": "Movements"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "item_id",
+          "item_name",
+          "item_price",
+          "quantity",
+          "total_value",
+          "status",
+          "customer_ref",
+          "version",
+          "created_at",
+          "updated_at",
+          "movements"
+        ],
+        "title": "OrderDetailResponse",
+        "description": "Rich order view \u2014 includes item details and stock movement audit trail.",
+        "example": {
+          "created_at": "2026-03-04T10:00:00Z",
+          "customer_ref": "CUST-001",
+          "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+          "item_id": "123e4567-e89b-12d3-a456-426614174000",
+          "item_name": "Classic Burger",
+          "item_price": "12.99",
+          "movements": [],
+          "quantity": 2,
+          "status": "DELIVERED",
+          "total_value": "25.98",
+          "updated_at": "2026-03-04T10:30:00Z",
+          "version": 3
         }
       },
       "OrderResponse": {
@@ -1115,7 +1404,17 @@
           "created_at",
           "updated_at"
         ],
-        "title": "OrderResponse"
+        "title": "OrderResponse",
+        "example": {
+          "created_at": "2026-03-04T10:00:00Z",
+          "customer_ref": "CUST-001",
+          "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+          "item_id": "123e4567-e89b-12d3-a456-426614174000",
+          "quantity": 2,
+          "status": "PENDING",
+          "updated_at": "2026-03-04T10:00:00Z",
+          "version": 1
+        }
       },
       "OrderStatus": {
         "type": "string",
@@ -1161,7 +1460,14 @@
           "low_stock_count",
           "out_of_stock_count"
         ],
-        "title": "StockAnalytics"
+        "title": "StockAnalytics",
+        "example": {
+          "low_stock_count": 3,
+          "out_of_stock_count": 1,
+          "total_items": 12,
+          "total_units": 285,
+          "total_value": "2458.75"
+        }
       },
       "StockMovementResponse": {
         "properties": {
@@ -1231,7 +1537,18 @@
           "reason",
           "created_at"
         ],
-        "title": "StockMovementResponse"
+        "title": "StockMovementResponse",
+        "example": {
+          "created_at": "2026-03-04T10:00:00Z",
+          "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+          "item_id": "123e4567-e89b-12d3-a456-426614174000",
+          "movement_type": "DEDUCTION",
+          "order_id": "987fbc97-4bed-5078-af07-9141ba07c9f3",
+          "quantity_delta": -5,
+          "reason": "Stock deducted for order 987fbc97-4bed-5078-af07-9141ba07c9f3",
+          "stock_after": 45,
+          "stock_before": 50
+        }
       },
       "StockResponse": {
         "properties": {
@@ -1260,7 +1577,13 @@
           "low_stock_threshold",
           "is_low_stock"
         ],
-        "title": "StockResponse"
+        "title": "StockResponse",
+        "example": {
+          "is_low_stock": false,
+          "item_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+          "low_stock_threshold": 10,
+          "stock_quantity": 45
+        }
       },
       "ValidationError": {
         "properties": {

@@ -368,6 +368,69 @@
       "name": "Orders",
       "item": [
         {
+          "name": "List orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}",
+                "description": "Required when REQUIRE_AUTH=true",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8000/api/v1/orders",
+              "host": [
+                "http://localhost:8000"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "",
+                  "description": "Filter by order status",
+                  "disabled": true
+                },
+                {
+                  "key": "date",
+                  "value": "",
+                  "description": "Exact calendar day (YYYY-MM-DD, UTC)",
+                  "disabled": true
+                },
+                {
+                  "key": "from_date",
+                  "value": "",
+                  "description": "Range start (ISO 8601 UTC)",
+                  "disabled": true
+                },
+                {
+                  "key": "to_date",
+                  "value": "",
+                  "description": "Range end (ISO 8601 UTC)",
+                  "disabled": true
+                },
+                {
+                  "key": "customer_ref",
+                  "value": "",
+                  "description": "Filter by customer reference",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Returns orders with optional filters. Use `date` for a specific calendar day, or `from_date`/`to_date` for a custom range. All datetime values are UTC."
+          },
+          "response": []
+        },
+        {
           "name": "Place Order",
           "request": {
             "method": "POST",
@@ -408,7 +471,7 @@
           "response": []
         },
         {
-          "name": "Get Order",
+          "name": "Get order detail",
           "request": {
             "method": "GET",
             "header": [
@@ -442,7 +505,7 @@
                 }
               ]
             },
-            "description": ""
+            "description": "Full order detail including item name, unit price, total value, and stock movement audit trail."
           },
           "response": []
         },
