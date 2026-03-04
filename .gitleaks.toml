@@ -1,0 +1,13 @@
+# .gitleaks.toml
+# Allow known safe test/example values
+
+[extend]
+useDefault = true
+
+[[allowlist.commits]]
+description = "Initial scaffold and example values"
+regexes = ['''postgres''', '''localhost''']
+
+[[allowlist.paths]]
+description = "Example env file contains placeholder values"
+paths = ['''.env.example''', '''README.md''', '''docker-compose.yml''', '''alembic.ini''']

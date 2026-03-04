@@ -98,6 +98,9 @@ async def db_engine(_resolved_db_url):
     engine = create_async_engine(_resolved_db_url, echo=False)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        # Wipe all rows so each test starts with a clean slate.
+        for table in reversed(Base.metadata.sorted_tables):
+            await conn.execute(table.delete())
     yield engine
     await engine.dispose()
 

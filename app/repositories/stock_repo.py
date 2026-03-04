@@ -16,6 +16,16 @@ class StockRepository:
         await self._session.flush()
         return movement
 
+    async def list_movements_for_order(
+        self, order_id: uuid.UUID
+    ) -> list[StockMovement]:
+        result = await self._session.execute(
+            select(StockMovement)
+            .where(StockMovement.order_id == order_id)
+            .order_by(StockMovement.created_at.asc())
+        )
+        return list(result.scalars().all())
+
     async def list_movements_for_item(
         self, item_id: uuid.UUID, limit: int = 100
     ) -> list[StockMovement]:

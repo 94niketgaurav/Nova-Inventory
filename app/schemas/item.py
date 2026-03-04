@@ -41,7 +41,23 @@ class ItemStockAdjust(BaseModel):
 
 
 class ItemResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
+            "example": {
+                "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                "name": "Classic Burger",
+                "description": "200g beef patty with lettuce and tomato",
+                "price": "12.99",
+                "stock_quantity": 50,
+                "low_stock_threshold": 10,
+                "is_low_stock": False,
+                "version": 1,
+                "created_at": "2026-03-04T10:00:00Z",
+                "updated_at": "2026-03-04T10:00:00Z",
+            }
+        },
+    )
 
     id: uuid.UUID
     name: str

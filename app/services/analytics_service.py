@@ -35,7 +35,7 @@ class AnalyticsService:
         return StockAnalytics(
             total_items=row.total_items,
             total_units=row.total_units,
-            total_value=Decimal(str(row.total_value)),
+            total_value=Decimal(str(row.total_value)).quantize(Decimal("0.01")),
             low_stock_count=row.low_stock_count,
             out_of_stock_count=row.out_of_stock_count,
         )
@@ -65,7 +65,7 @@ class AnalyticsService:
             .join(MenuItem, Order.item_id == MenuItem.id)
             .where(Order.status == OrderStatus.DELIVERED, Order.created_at >= since)
         )
-        revenue = Decimal(str(rev_result.scalar_one()))
+        revenue = Decimal(str(rev_result.scalar_one())).quantize(Decimal("0.01"))
 
         # Refund value: price * quantity for CANCELLED orders that had stock deducted
         refund_result = await self._session.execute(
@@ -76,7 +76,7 @@ class AnalyticsService:
             .join(MenuItem, Order.item_id == MenuItem.id)
             .where(Order.status == OrderStatus.CANCELLED, Order.created_at >= since)
         )
-        refund_value = Decimal(str(refund_result.scalar_one()))
+        refund_value = Decimal(str(refund_result.scalar_one())).quantize(Decimal("0.01"))
 
         return OrderAnalytics(
             total_orders=row.total,

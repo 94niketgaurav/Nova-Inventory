@@ -159,8 +159,15 @@ if __name__ == "__main__":
     spec = app.openapi()
     collection = openapi_to_postman(spec)
 
-    output_path = Path(__file__).parent.parent / "docs" / "postman_collection.json"
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(json.dumps(collection, indent=2))
-    print(f"Postman collection written to {output_path}", file=sys.stderr)
-    print(json.dumps(collection, indent=2))
+    docs_dir = Path(__file__).parent.parent / "docs"
+    docs_dir.mkdir(parents=True, exist_ok=True)
+
+    # Write Postman collection
+    postman_path = docs_dir / "postman_collection.json"
+    postman_path.write_text(json.dumps(collection, indent=2))
+    print(f"Postman collection written to {postman_path}", file=sys.stderr)
+
+    # Write static OpenAPI snapshot
+    openapi_path = docs_dir / "openapi.json"
+    openapi_path.write_text(json.dumps(spec, indent=2))
+    print(f"OpenAPI spec written to {openapi_path}", file=sys.stderr)

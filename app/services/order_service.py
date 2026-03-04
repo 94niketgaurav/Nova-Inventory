@@ -1,5 +1,7 @@
 # Copyright (c) 2026 Nova Inventory Service. All Rights Reserved.
 import uuid
+from datetime import datetime
+from decimal import Decimal
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,6 +19,8 @@ from app.domain.models.stock_movement import StockMovement
 from app.repositories.item_repo import ItemRepository
 from app.repositories.order_repo import OrderRepository
 from app.repositories.stock_repo import StockRepository
+from app.schemas.order import OrderDetailResponse
+from app.schemas.stock import StockMovementResponse
 
 logger = get_logger(__name__)
 
@@ -166,6 +170,40 @@ class OrderService:
         if not order:
             raise NotFoundError("Order", order_id)
         return order
+
+    async def get_order_detail(self, order_id: uuid.UUID) -> OrderDetailResponse:
+        """Return a fully hydrated order — includes item info and stock movements."""
+        order = await self._orders.get_by_id(order_id)
+        if not order:
+            raise NotFoundError("Order", order_id)
+        item = await self._items.get_by_id(order.item_id)
+        movements = await self._stock.list_movements_for_order(order_id)
+        item_price = item.price if item else Decimal("0")
+        return OrderDetailResponse(
+            id=order.id,
+            item_id=order.item_id,
+            item_name=item.name if item else "Unknown",
+            item_price=item_price,
+            quantity=order.quantity,
+            total_value=(item_price * order.quantity).quantize(Decimal("0.01")),
+            status=order.status,
+            customer_ref=order.customer_ref,
+            version=order.version,
+            created_at=order.created_at,
+            updated_at=order.updated_at,
+            movements=[StockMovementResponse.model_validate(m) for m in movements],
+        )
+
+    async def list_orders(
+        self,
+        status: OrderStatus | None = None,
+        from_dt: datetime | None = None,
+        to_dt: datetime | None = None,
+        customer_ref: str | None = None,
+    ) -> list[Order]:
+        return await self._orders.list_orders(
+            status=status, from_dt=from_dt, to_dt=to_dt, customer_ref=customer_ref
+        )
 
     async def _transition(self, order_id: uuid.UUID, new_status: OrderStatus) -> Order:
         order = await self._orders.get_by_id(order_id)

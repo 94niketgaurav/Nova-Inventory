@@ -1,6 +1,7 @@
 # Copyright (c) 2026 Nova Inventory Service. All Rights Reserved.
 from collections.abc import AsyncGenerator
 
+from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -13,7 +14,7 @@ from app.core.config import settings
 # ── Singleton engine — created once, reused for the process lifetime ──────────
 _engine: AsyncEngine = create_async_engine(
     settings.database_url,
-    echo=settings.environment == "development",
+    echo=False,
     pool_size=10,
     max_overflow=20,
     pool_pre_ping=True,
@@ -41,11 +42,19 @@ def get_session_factory() -> async_sessionmaker[AsyncSession]:
 
 
 async def get_db() -> AsyncGenerator[AsyncSession]:
-    """FastAPI dependency — yields a session, commits on success, rolls back on error."""
+    """FastAPI dependency — yields a session, commits on success, rolls back on error.
+
+    HTTPException is treated as a controlled outcome (e.g. an order correctly
+    transitioned to REJECTED before the 422 is raised) so we commit rather than
+    roll back in that branch.  Unexpected exceptions trigger a rollback.
+    """
     async with _session_factory() as session:
         try:
             yield session
             await session.commit()
+        except HTTPException:
+            await session.commit()
+            raise
         except Exception:
             await session.rollback()
             raise

@@ -29,8 +29,6 @@ def configure_logging() -> None:
         processors=processors,
         wrapper_class=structlog.make_filtering_bound_logger(log_level),
         context_class=dict,
-        # stdlib LoggerFactory produces logging.Logger objects that have .name,
-        # which is required by the structlog.stdlib.add_logger_name processor.
         logger_factory=structlog.stdlib.LoggerFactory(),
         cache_logger_on_first_use=True,
     )
